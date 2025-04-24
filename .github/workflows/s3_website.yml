@@ -1,12 +1,8 @@
 name: Deploy Website to S3 Bucket
 
-
 on:
-  push:
-    branches:
-      - 'main'
-    paths:
-      - 'index.html'
+  pull_request:
+    types: [opened, reopened]
 
 jobs:
   build:
