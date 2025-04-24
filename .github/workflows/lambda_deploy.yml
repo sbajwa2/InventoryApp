@@ -1,0 +1,37 @@
+name: Deploy Python functions to AWS Lambda
+
+on:
+  pull_request:
+    types: [opened, reopened]
+    paths:
+      - 'lambda/**/lambda_function.py'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4.0.2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-1
+
+      - name: Deploy each Lambda function
+        run: |
+          for fn in lambda/*; do
+            fn_name=$(basename $fn)
+            cd $fn
+            zip -r function.zip lambda_function.py
+            aws lambda update-function-code \
+              --function-name $fn_name \
+              --zip-file fileb://function.zip \
+              --publish
+            rm function.zip
+            cd ../..
+          done
